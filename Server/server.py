@@ -33,9 +33,8 @@ class Server():
                 conn, addr = self.s.accept()
 
                 # Recebendo nome de usuário
-                username = ''
-                username_lenght = conn.recv(HEADER).decode(FORMAT)
-                username_lenght = int(username_lenght)
+                username = '' # resetando variável
+                username_lenght = int(conn.recv(HEADER).decode(FORMAT)) # recebendo e decodificando tamanho do nome
                 username = conn.recv(username_lenght).decode(FORMAT)
 
                 self.username.append(username)
@@ -92,8 +91,13 @@ class Server():
                 client_online = False
                 return
 
-    def systemMsg(self):
-        pass
+    # def systemMsg(self, conn, op):
+    #     if(op == 1):
+    #         continue
+    #     message = msg.encode(FORMAT)
+    #     msg_length = len(message)
+    #     send_length = str(msg_length).encode(FORMAT)
+    #     send_length += b' ' * (HEADER - len(send_length))
 
     def serverMsg(self, msg):
         message = msg.encode(FORMAT)

@@ -1,9 +1,25 @@
+from client import *
+
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 
 
+class MainWindow(Client, object):
+	def __init__(self, username, server, port, Form):
+		# Inicializando construtor do cliente
+		super().__init__(username, server, port)
+		object().__init__()
 
-class MainWindow(object):
+		# Inicializando elementos da interface
+		self.setupUi(Form)
+
+
+	def keyPressEvent(self, event):
+		print("MERDAAAAA")
+		key = event.key()
+		if key == QtCore.Qt.Key_Return:
+			print ("Enter")
+
 
 	def setupUi(self, Form):
 
@@ -171,15 +187,13 @@ class MainWindow(object):
 		self.actionNova_Conex_o.setText(_translate("MainWindow", "Nova Conexão"))
 		self.actionNova_Conex_o.setShortcut(_translate("MainWindow", "Ctrl+N"))
 		
-	def keyPressEvent(self, event):
-		if event.key() == QtCore.Qt.Key_Return:
-			self.sendBtn.clicked.connect(self.send)
-		
+
 	def send(self):
 		msg = self.msg.text()
 		if(msg == ''):
 			return
 		else:
+			self.sendMsg(msg)
 			self.screen.append(f"Você: {msg}")
 			self.msg.setText('')
 			print(msg)
@@ -188,10 +202,9 @@ class MainWindow(object):
 def createMainWindow(name, address, port):
 	app = QtWidgets.QApplication(sys.argv)
 	Form = QtWidgets.QMainWindow()
-	win = MainWindow()
-	win.setupUi(Form)
+	win = MainWindow(name, address, port, Form)
 	Form.show()
-	sys.exit(app.exec_())
+	app.exec_()
 
 
 if __name__ == "__main__":

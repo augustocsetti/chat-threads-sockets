@@ -1,6 +1,8 @@
 import threading
 import socket
 
+#from mainWindow import*
+
 HEADER = 64
 
 FORMAT = "utf-8"
@@ -23,10 +25,13 @@ class Client():
         self.sendMsg(self.name)
 
         # Criando Thread para receber mensagens
-        self.thread = threading.Thread(target=self.recvMsg, args=())
-        self.thread.start()
+        self.thread_recv = threading.Thread(target=self.recvMsg, args=())
+        self.thread_recv.start()
                
-        self.main_loop()
+        # Iniciando Loop de envio de mensagens
+        self.thread_send = threading.Thread(target=self.main_loop, args=())
+        self.thread_send.start()
+        # self.main_loop()      
 
     def main_loop(self):
         # Esperando usuário enviar mensagem (msg em branco encerra conexão)

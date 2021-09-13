@@ -1,8 +1,9 @@
 chat-threads-sockets
+
 Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizando Threads e Sockets.
 
-- Pesquisar socket rodar em máquinas diferentes
 - Enviar com enter
+- Pesquisar socket rodar em máquinas diferentes
 - Adicionar ícone miniatura (criar ícone)
 - Compilar arqv
 
