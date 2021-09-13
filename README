@@ -1,0 +1,18 @@
+chat-threads-sockets
+Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizando Threads e Sockets.
+
+- Pesquisar socket rodar em máquinas diferentes
+- Enviar com enter
+- Adicionar ícone miniatura (criar ícone)
+- Compilar arqv
+
+
+
+python
+pip
+
+pyInstaller
+pip install pyqt5
+pip install pyqt5-tools (design)
+
+pyuic5 -x untitled.ui -o test.py
