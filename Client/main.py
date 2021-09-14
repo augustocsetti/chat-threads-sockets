@@ -1,19 +1,13 @@
-from logWindow import *
+from logWindow import createLogWindow
 from mainWindow import *
-from client import *
-
-import threading
-
 
 
 def start():
     # Iniciando janela de login e recebendo parâmetro
     name, addr, port = createLogWindow()
 
-    # Iniciando Cliente e Janela do chat
+    # Iniciando Janela do chat, que inicia a classe client
     createMainWindow(name, addr, port)
-
-    # createMainWindow(name, addr, port)
 
 if __name__ == "__main__":
     start()

@@ -7,7 +7,7 @@ Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizand
 - Adicionar ícone miniatura (criar ícone)
 - Compilar arqv
 
-
+- Criar classe cliente para manipular características no servidor
 
 python
 pip

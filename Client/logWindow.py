@@ -1,39 +1,43 @@
-from client import createClient
-from mainWindow import createMainWindow
-
-import threading
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QMainWindow, QApplication
 
 
 def createLogWindow():
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
+    app = QApplication(sys.argv)
     win = LogWindow()
-    win.setupUi(Form)
-    Form.show()
+    win.show()
     app.exec_()
     return (win.name, str(win.addr), win.prt)
 
 
-class LogWindow(object):
+class LogWindow(QMainWindow):
+    def __init__(self):
+        # Inicializando construtor da janela
+        super(QMainWindow, self).__init__()
+  
+        # Carregando componentes da interface
+        self.setupUi()
 
-    def setupUi(self, Form):
-        
-        # WINDOW
-        self.win = Form
-        if not Form.objectName():
-            Form.setObjectName(u"Form")
-        
-        Form.resize(470, 602)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == QtCore.Qt.Key_Return:
+            self.login()
+
+
+    def setupUi(self):
+        # WINDOW      
+        self.setObjectName("LogWindow") 
+        self.resize(470, 602)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(Form.sizePolicy().hasHeightForWidth())
-        Form.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(223, 144, 138, 255), stop:0.971591 rgba(57, 255, 136, 255));")
+        sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
+        self.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(223, 144, 138, 255), stop:0.971591 rgba(57, 255, 136, 255));")
         
         # FONTES
         font = QFont()
@@ -52,13 +56,15 @@ class LogWindow(object):
         font4.setPointSize(30)
         font4.setBold(True)
         font4.setWeight(75)
-
+   
         # MAIN GRID
-        self.gridLayout = QGridLayout(Form)
+        self.centralwidget = QtWidgets.QWidget(self)
+        self.centralwidget.setObjectName("centralwidget")
+        self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName(u"gridLayout")
-        
+
         # LOGO
-        self.logo = QLabel(Form)
+        self.logo = QLabel(self.centralwidget)
         self.logo.setObjectName(u"logo")
         self.logo.setEnabled(True)
         sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -78,9 +84,9 @@ class LogWindow(object):
         self.logo.setWordWrap(False)
         self.logo.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));")
         self.gridLayout.addWidget(self.logo, 1, 1, 1, 1, Qt.AlignHCenter)
-
+        
         # TÍTULO
-        self.titulo = QLabel(Form)
+        self.titulo = QLabel(self.centralwidget)
         self.titulo.setObjectName(u"titulo")
         self.titulo.setMaximumSize(QSize(16777215, 40))
         self.titulo.setFont(font4)
@@ -92,7 +98,7 @@ class LogWindow(object):
         self.gridLayout.addWidget(self.titulo, 2, 1, 1, 1)
 
         # LABEL LOGIN
-        self.label_5 = QLabel(Form)
+        self.label_5 = QLabel(self.centralwidget)
         self.label_5.setObjectName(u"label_5")
         self.label_5.setMaximumSize(QSize(16777215, 40))
         self.label_5.setFont(font3)
@@ -101,14 +107,14 @@ class LogWindow(object):
         self.gridLayout.addWidget(self.label_5, 3, 1, 1, 1)
 
         # LABEL USERNAME
-        self.label_2 = QLabel(Form)
+        self.label_2 = QLabel(self.centralwidget)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setFont(font)
         self.label_2.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));\n color: white;")
         self.gridLayout.addWidget(self.label_2, 4, 1, 1, 1)
 
         # INPUT USERNAME
-        self.username = QLineEdit(Form)
+        self.username = QLineEdit(self.centralwidget)
         self.username.setObjectName(u"username")
         self.username.setMaximumSize(QSize(400, 31))
         self.username.setFont(font2)
@@ -117,14 +123,14 @@ class LogWindow(object):
         self.gridLayout.addWidget(self.username, 6, 1, 1, 1)
 
         # LABEL ENDEREÇO
-        self.label_3 = QLabel(Form)
+        self.label_3 = QLabel(self.centralwidget)
         self.label_3.setObjectName(u"label_3")
         self.label_3.setFont(font)
         self.label_3.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));\n color: white;")
         self.gridLayout.addWidget(self.label_3, 7, 1, 1, 1)
 
         # INPUT ENDEREÇO
-        self.adress = QLineEdit(Form)
+        self.adress = QLineEdit(self.centralwidget)
         self.adress.setObjectName(u"adress")
         self.adress.setMaximumSize(QSize(400, 31))
         self.adress.setFont(font2)
@@ -132,14 +138,14 @@ class LogWindow(object):
         self.gridLayout.addWidget(self.adress, 9, 1, 1, 1)
 
         # LABEL PORTA
-        self.label_4 = QLabel(Form)
+        self.label_4 = QLabel(self.centralwidget)
         self.label_4.setObjectName(u"label_4")
         self.label_4.setFont(font)
         self.label_4.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));\n color: white;")
         self.gridLayout.addWidget(self.label_4, 10, 1, 1, 1)
 
         # INPUT PORTA
-        self.port = QLineEdit(Form)
+        self.port = QLineEdit(self.centralwidget)
         self.port.setObjectName(u"port")
         self.port.setMaximumSize(QSize(400, 31))
         self.port.setFont(font2)
@@ -147,14 +153,14 @@ class LogWindow(object):
         self.gridLayout.addWidget(self.port, 11, 1, 1, 1)
 
         # LABEL ERRO
-        self.error = QLabel(Form)
+        self.error = QLabel(self)
         self.error.setObjectName(u"errorLabel")
         self.error.setFont(font)
         self.error.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));\n color: Red;")
         self.gridLayout.addWidget(self.error, 12, 1, 1, 1)
 
         # BUTTON ENTRAR
-        self.entrar = QPushButton(Form)
+        self.entrar = QPushButton(self.centralwidget)
         self.entrar.setObjectName(u"entrar")
         self.entrar.setSizeIncrement(QSize(0, 0))
         self.entrar.setBaseSize(QSize(0, 0))
@@ -165,7 +171,7 @@ class LogWindow(object):
         self.entrar.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 255, 0));\n color: white;")
         self.gridLayout.addWidget(self.entrar, 13, 1, 1, 1)
         self.entrar.clicked.connect(self.login)
-
+        
         # SPACERS
         # self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         # self.gridLayout.addItem(self.verticalSpacer_3, 12, 1, 1, 1)
@@ -173,27 +179,33 @@ class LogWindow(object):
         self.gridLayout.addItem(self.verticalSpacer_2, 0, 1, 1, 1)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.gridLayout.addItem(self.verticalSpacer, 14, 1, 1, 1)
-        self.completeUi(Form)
 
-        QMetaObject.connectSlotsByName(Form)
 
-    def completeUi(self, Form):
+        self.setCentralWidget(self.centralwidget)
+
+        self.completeUi()
+
+        QMetaObject.connectSlotsByName(self)
+
+
+    def completeUi(self):
         # Nomes
-        Form.setWindowTitle(QCoreApplication.translate("Form", u"Abachat", None))
-        self.label_4.setText(QCoreApplication.translate("Form", u"Porta", None))
-        self.label_3.setText(QCoreApplication.translate("Form", u"Endere\u00e7o", None))
-        self.entrar.setText(QCoreApplication.translate("Form", u"Entrar", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"Login", None))
-        self.label_2.setText(QCoreApplication.translate("Form", u"Username", None))
-        self.titulo.setText(QCoreApplication.translate("Form", u"Abachat", None))
+        self.setWindowTitle(QCoreApplication.translate("self", u"Abachat", None))
+        self.label_4.setText(QCoreApplication.translate("self", u"Porta", None))
+        self.label_3.setText(QCoreApplication.translate("self", u"Endere\u00e7o", None))
+        self.entrar.setText(QCoreApplication.translate("self", u"Entrar", None))
+        self.label_5.setText(QCoreApplication.translate("self", u"Login", None))
+        self.label_2.setText(QCoreApplication.translate("self", u"Username", None))
+        self.titulo.setText(QCoreApplication.translate("self", u"Abachat", None))
         self.logo.setText("")
 
         # Place Holders
-        self.username.setPlaceholderText(QCoreApplication.translate("Form", u"Joana", None))
-        self.adress.setPlaceholderText(QCoreApplication.translate("Form", u"123.456.7.890", None))
-        self.port.setPlaceholderText(QCoreApplication.translate("Form", u"5000", None))
+        self.username.setPlaceholderText(QCoreApplication.translate("self", u"Joana", None))
+        self.adress.setPlaceholderText(QCoreApplication.translate("self", u"123.456.7.890", None))
+        self.port.setPlaceholderText(QCoreApplication.translate("self", u"5000", None))
 
-    def login(self, Form):
+
+    def login(self):
         self.name = self.username.text()
         self.addr = self.adress.text()
         self.prt = self.port.text()
@@ -203,28 +215,18 @@ class LogWindow(object):
         if len(self.addr)==0:
             self.addr = '192.168.1.113'
         if len(self.prt)==0:
-            self.prt = '5000'
+            self.prt = '5001'
+        self.close()
 
-        # if len(name) == 0 or len(address) == 0 or len(port) == 0:
+        # if len(self.name) == 0 or len(self.addr) == 0 or len(self.prt) == 0:
         #     self.error.setText(QCoreApplication.translate("Form", u"Por favor, preencha todos os campos!", None))
-        # else:
-
-        # # Iniciando Cliente
-        # Client = threading.Thread(target=createClient, args=(name, address, port))
-        # Client.start()
-
-        # # Iniciando Janela Principal
-        # Chat = threading.Thread(target=createMainWindow, args=(name, address, port))
-        # Chat.start()
-
-        # Encerrando janela de login
-        self.win.close()
+        # else:    
+        #     # Encerrando janela de login
+        #     self.close()
 
 
 if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    Form = QtWidgets.QWidget()
+    app = QApplication(sys.argv)
     win = LogWindow()
-    win.setupUi(Form)
-    Form.show()
+    win.show()
     app.exec_()

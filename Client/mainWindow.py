@@ -1,35 +1,70 @@
-from client import *
+from client import Client, DISCONNECT_MESSAGE
 
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets, Qt
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QApplication
+
+#Variáveis de teste
+USERNAME = "Test"
+ADDR = "localhost"
+PORT = 5001
+
+def createMainWindow(name, address, port):
+
+	app = QApplication(sys.argv)
+	win = MainWindow(name, address, port)
+	win.show()
+
+	app.exec_()
 
 
-class MainWindow(Client, object):
-	def __init__(self, username, server, port, Form):
-		# Inicializando construtor do cliente
-		super().__init__(username, server, port)
-		object().__init__()
+class MainWindow(QMainWindow):
 
-		# Inicializando elementos da interface
-		self.setupUi(Form)
+	def __init__(self, name, address, port):
+		# Inicializando construtor da janela
+		super(QMainWindow, self).__init__()
+        
+		# Carregando componentes da interface
+		self.setupUi()
+
+		# Inicializando funções de comunicação do cliente
+		self.client = Cli
+
+
+	def closeEvent(self, event):
+		self.client.sendMsg(DISCONNECT_MESSAGE)
+		#event.accept()
 
 
 	def keyPressEvent(self, event):
-		print("MERDAAAAA")
 		key = event.key()
 		if key == QtCore.Qt.Key_Return:
-			print ("Enter")
+			self.send()
 
 
-	def setupUi(self, Form):
+	def send(self):
+		msg = self.msg.text()
+		if(msg == ''):
+			return
+		else:
+			self.client.sendMsg(msg)
+			self.chat.append(f"Você: {msg}")
+			self.msg.setText('')
+			#print(msg)
+
+
+	def updateUserList(self, list):
+		self.userList.clear()
+
+	def setupUi(self):
 
 		# WINDOW
-		Form.setObjectName("MainWindow")
-		Form.resize(783, 549)
-		Form.setStyleSheet("background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(223, 144, 138, 255), stop:0.971591 rgba(57, 255, 136, 255));")
+		self.setObjectName("MainWindow")
+		self.resize(800, 600)
+		self.setStyleSheet("background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(223, 144, 138, 255), stop:0.971591 rgba(57, 255, 136, 255));")
 
 		# MAIN GRID
-		self.centralwidget = QtWidgets.QWidget(Form)
+		self.centralwidget = QtWidgets.QWidget(self)
 		self.centralwidget.setObjectName("centralwidget")
 		self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
 		self.gridLayout.setContentsMargins(20, 20, 20, 20)
@@ -115,19 +150,17 @@ class MainWindow(Client, object):
 		self.gridLayout.addWidget(self.msg, 6, 2, 1, 1)
 
 		# CAMPO PARA MENSAGENS
-		self.screen = QtWidgets.QTextBrowser(self.centralwidget)
-		self.screen.setMaximumSize(QtCore.QSize(4000, 4000))
+		self.chat = QtWidgets.QTextBrowser(self.centralwidget)
+		self.chat.setMaximumSize(QtCore.QSize(4000, 4000))
 		font = QtGui.QFont()
 		font.setFamily("Calibri")
 		font.setPointSize(12)
-		self.screen.setFont(font)
-		self.screen.setStyleSheet("background-color: rgb(255, 255, 255);\n"
+		self.chat.setFont(font)
+		self.chat.setStyleSheet("background-color: rgb(255, 255, 255);\n"
 		"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 255, 115));\n"
 		"color: rgb(135, 97, 88);")
-		self.screen.setObjectName("screen")
-		self.gridLayout.addWidget(self.screen, 0, 2, 5, 2)
-
-		Form.setCentralWidget(self.centralwidget) 
+		self.chat.setObjectName("chat")
+		self.gridLayout.addWidget(self.chat, 0, 2, 5, 2)
 
 		# SEND BUTTON
 		self.sendBtn = QtWidgets.QPushButton(self.centralwidget)
@@ -144,7 +177,7 @@ class MainWindow(Client, object):
 		self.sendBtn.clicked.connect(self.send)
 
 		# MENU BAR
-		self.menubar = QtWidgets.QMenuBar(Form)
+		self.menubar = QtWidgets.QMenuBar(self)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 783, 21))
 		self.menubar.setStyleSheet("background-color: rgb(255, 255, 255);")
 		self.menubar.setObjectName("menubar")
@@ -152,12 +185,13 @@ class MainWindow(Client, object):
 		self.menuOptions.setObjectName("menuOptions")
 		self.menuSobre = QtWidgets.QMenu(self.menubar)
 		self.menuSobre.setObjectName("menuSobre")
-		Form.setMenuBar(self.menubar)
-		self.actionQuit = QtWidgets.QAction(Form)
+		self.setMenuBar(self.menubar)
+		self.actionQuit = QtWidgets.QAction(self)
 		self.actionQuit.setObjectName("actionQuit")
-		self.actionLimpar = QtWidgets.QAction(Form)
+		self.actionLimpar = QtWidgets.QAction(self)
 		self.actionLimpar.setObjectName("actionLimpar")
-		self.actionNova_Conex_o = QtWidgets.QAction(Form)
+
+		self.actionNova_Conex_o = QtWidgets.QAction(self)
 		self.actionNova_Conex_o.setObjectName("actionNova_Conex_o")
 		self.menuOptions.addAction(self.actionNova_Conex_o)
 		self.menuOptions.addAction(self.actionLimpar)
@@ -166,46 +200,36 @@ class MainWindow(Client, object):
 		self.menubar.addAction(self.menuOptions.menuAction())
 		self.menubar.addAction(self.menuSobre.menuAction())
 
-		self.completeUi(Form)
-		QtCore.QMetaObject.connectSlotsByName(Form)
+		self.setCentralWidget(self.centralwidget) 
+		
+		self.completeUi()
+		
+		QtCore.QMetaObject.connectSlotsByName(self)
 	
-	def completeUi(self, Form):
+
+	def completeUi(self):
 		_translate = QtCore.QCoreApplication.translate
-		Form.setWindowTitle(_translate("MainWindow", "Abachat App"))
+		self.setWindowTitle(_translate("MainWindow", "Abachat App"))
 		self.label.setText(_translate("MainWindow", "Usuários Conectados"))
 		self.sendBtn.setText(_translate("MainWindow", "Enviar"))
 		self.titulo.setText(_translate("MainWindow", "Abachat"))
-		self.msg.setPlaceholderText(QtCore.QCoreApplication.translate("Form", u"Escreva uma mensagem", None))
+		self.msg.setPlaceholderText(QtCore.QCoreApplication.translate("self", u"Escreva uma mensagem", None))
 		
 		# Menu
 		self.menuOptions.setTitle(_translate("MainWindow", "Menu"))
 		self.menuSobre.setTitle(_translate("MainWindow", "Sobre"))
 		self.actionQuit.setText(_translate("MainWindow", "Quit"))
 		self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+		#self.actionQuit.triggered.connect(self.close())
 		self.actionLimpar.setText(_translate("MainWindow", "Limpar Chat"))
-		self.actionLimpar.setShortcut(_translate("MainWindow", "Ctrl+L"))
+		self.actionLimpar.setShortcut(_translate("MainWindow", "Escape"))
+		self.actionLimpar.triggered.connect(self.clearChat)
 		self.actionNova_Conex_o.setText(_translate("MainWindow", "Nova Conexão"))
 		self.actionNova_Conex_o.setShortcut(_translate("MainWindow", "Ctrl+N"))
 		
-
-	def send(self):
-		msg = self.msg.text()
-		if(msg == ''):
-			return
-		else:
-			self.sendMsg(msg)
-			self.screen.append(f"Você: {msg}")
-			self.msg.setText('')
-			print(msg)
-
-
-def createMainWindow(name, address, port):
-	app = QtWidgets.QApplication(sys.argv)
-	Form = QtWidgets.QMainWindow()
-	win = MainWindow(name, address, port, Form)
-	Form.show()
-	app.exec_()
+	def clearChat(self):
+		self.chat.clear()
 
 
 if __name__ == "__main__":
-	createMainWindow()
+	createMainWindow(USERNAME, ADDR, PORT)

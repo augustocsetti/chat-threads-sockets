@@ -1,7 +1,9 @@
 import threading
 import socket
 from datetime import datetime
+
 from config import *
+
 
 class Server():
 
@@ -26,6 +28,7 @@ class Server():
 
         self.subscribe()
         
+
     def subscribe(self):
         while self.online:
             try:
@@ -37,8 +40,11 @@ class Server():
                 username_lenght = int(conn.recv(HEADER).decode(FORMAT)) # recebendo e decodificando tamanho do nome
                 username = conn.recv(username_lenght).decode(FORMAT)
 
+                # Adicionando às listas de clientes o nome e a conexão
                 self.username.append(username)
                 self.connected.append(conn)
+
+                self.listUser(ADD, username)
 
                 # Criando Thread para novo cliente
                 thread = threading.Thread(target=self.update, args=(conn, username))
@@ -55,6 +61,7 @@ class Server():
                 self.online = False
                 return
 
+
     def unsubscribe(self, conn, username):
         # Remova usuário das listas e encerra comunicação
         index = self.connected.index(conn)
@@ -67,6 +74,7 @@ class Server():
         msg = (f"{username} saiu da chat ({_date}).")
         self.serverMsg(msg)
         print(msg)
+
 
     def update(self, conn, username):
         client_online = True
@@ -84,52 +92,85 @@ class Server():
                         return
                     
                     # Loop de envio a outros usuários
-                    self.globalMsg(conn, username, msg)
+                    self.globalMsg(msg, conn, username)
 
             except: # Falha de conexão
                 self.unsubscribe(conn, username)
                 client_online = False
                 return
 
-    # def systemMsg(self, conn, op):
-    #     if(op == 1):
-    #         continue
-    #     message = msg.encode(FORMAT)
-    #     msg_length = len(message)
-    #     send_length = str(msg_length).encode(FORMAT)
-    #     send_length += b' ' * (HEADER - len(send_length))
 
+    def listUser(self, op, n):
+        message, send_length = encodeMsg(f"{NAME_LIST}{n}")
+        for client in self.connected:
+            client.send(send_length)
+            client.send(message)
+
+        # for user in self.username:
+        #     message, send_length = encodeMsg(f"{NAME_LIST}{user}")
+        #     for client in self.connected:
+        #         client.send(send_length)
+        #         client.send(message)
+
+        # message, send_length = encodeMsg(f"{NAME_LIST_END}")
+        # client.send(send_length)
+        # client.send(message)
+
+
+    # Func. de disparo de msgns servidor-usuário
     def serverMsg(self, msg):
-        message = msg.encode(FORMAT)
-        msg_length = len(message)
-        send_length = str(msg_length).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
+        # Adicionando TAG de msgm
+        msg = (f"{NEW_MSG}{msg}")
+        
+        # Recebendo variáveis já codificados para envio
+        message, send_length = encodeMsg(msg)
 
         for client in self.connected:
             client.send(send_length)
             client.send(message)
 
-    def globalMsg(self, conn, username, msg):
+
+    # Func. de disparo de msgns usuário-usuário
+    def globalMsg(self, msg, conn, username):
+        # Adicionando TAG de msgm
+        msg = (f"{NEW_MSG}{msg}")
+
+        # Recebendo data e hora
         _date = date()
-        msg = (f"{username} ({_date}): {msg}")
+
+        # Modelando a mensagem para os clientes e para o remetente
+        msg = (f"{NEW_MSG}{username} ({_date}): {msg}")
+        msgSelf = (f"{NEW_MSG}Eu ({_date}): {msg}")
+
         print(msg)
 
-        message = msg.encode(FORMAT)
-        msg_length = len(message)
-        send_length = str(msg_length).encode(FORMAT)
-        send_length += b' ' * (HEADER - len(send_length))
+        # Recebendo variáveis já codificados para envio
+        message, send_length = encodeMsg(msg)
+        messageSelf, send_lengthSelf = encodeMsg(msgSelf)
 
+        # Enviando para todos os clientes conectados
         for client in self.connected:
+            # Se o cliente a enviar não for remetente envia msg com nome do usuário
             if(client != conn):
                 client.send(send_length)
                 client.send(message)
+            # Se for envia modelo Self com você ao invés do nome
             else:
-                continue
+                client.send(send_lengthSelf)
+                client.send(messageSelf)
+
 
 def date():
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     return(f"{now.day}/{now.month}/{now.year} - {current_time}")
+
+def encodeMsg(msg):
+    message = str(msg).encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER - len(send_length))
+    return message, send_length
 
 if ("__main__" == __name__):
     s = Server()

@@ -1,19 +1,12 @@
+from config import *
 import threading
 import socket
-
-#from mainWindow import*
-
-HEADER = 64
-
-FORMAT = "utf-8"
-DISCONNECT_MESSAGE = "[DISCONNECT]"
-SERVER = "192.168.1.113"
-PORT = 5000
 
 
 class Client():
 
     def __init__(self, username, server, port):
+        
         # Iniciando conexão com servidor
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         ADDR = (server, int(port))
@@ -28,10 +21,11 @@ class Client():
         self.thread_recv = threading.Thread(target=self.recvMsg, args=())
         self.thread_recv.start()
                
-        # Iniciando Loop de envio de mensagens
-        self.thread_send = threading.Thread(target=self.main_loop, args=())
-        self.thread_send.start()
-        # self.main_loop()      
+        # (PARA USAR NO TERMINAL) Iniciando Loop de envio de mensagens
+        # self.thread_send = threading.Thread(target=self.main_loop, args=())
+        # self.thread_send.start()
+        # #self.main_loop()      
+
 
     def main_loop(self):
         # Esperando usuário enviar mensagem (msg em branco encerra conexão)
@@ -43,21 +37,24 @@ class Client():
                     msg = ""
                 else:
                     self.disconnect()
+                    self.online = False
             except: # Se o programa for interrompido a conexão é encerrada
                 self.disconnect()
 
+
     def sendMsg(self, msg):
-        # Codifica a mensagem e envia tamanho
-        try:
-            message = str(msg).encode(FORMAT)
-            msg_length = len(message)
-            send_length = str(msg_length).encode(FORMAT)
-            send_length += b' ' * (HEADER - len(send_length))
-            self.client.send(send_length)
-            self.client.send(message)
-        except:
-            print("ERRO! Falha na conexão")
-            self.online = False
+            try:
+                message, send_length = encodeMsg(msg)
+                self.client.send(send_length)
+                self.client.send(message)
+
+                if (msg == DISCONNECT_MESSAGE):
+                    self.disconnect()
+
+            except:
+                print("Falha na conexão")
+                self.online = False
+
 
     def recvMsg(self):
         # Loop de recebimento de msgm
@@ -67,22 +64,39 @@ class Client():
                 if msg_lenght:
                     msg_lenght = int(msg_lenght)
                     msg = self.client.recv(msg_lenght).decode(FORMAT)
-                    print(msg)
+                    self.handleMsg(msg)
             except:
                 self.online = False
 
+
     def disconnect(self):
-        # Msgm de desconexão
+
+        # Encerrando conexão socket
         print("Você está se desconectando...")
-        self.sendMsg(DISCONNECT_MESSAGE)
         self.client.close()
         self.online = False
         print("[CONEXÃO ENCERRADA]")
 
 
+    def handleMsg(self, msg):
+        print(f"OPM:{msg[OP]} NL:{NAME_LIST}")
+        if (msg[OP] == NAME_LIST):
+            print("LOOP")
+            msg.pop(0)
+            print(f"Mensagem tratada:")
+            self.userList.append(msg)
+                
+# SUPORT FUNCTIONS
+def encodeMsg(msg):
+    message = str(msg).encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER - len(send_length))
+    return message, send_length
+
+
 def createClient(username, server, port):
     c = Client(username, server, port)
-
 
 if(__name__ == "__main__"):
     createClient(input("Insira seu nome: "), SERVER, PORT)
