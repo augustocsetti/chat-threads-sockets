@@ -9,7 +9,7 @@ __pycache__/
 *$py.class
 
 # Ui
-*.ui
+Trash/
 
 # C extensions
 *.so
