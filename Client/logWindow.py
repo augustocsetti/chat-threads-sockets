@@ -5,13 +5,14 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QMainWindow, QApplication
 
+from config import*
 
 def createLogWindow():
     app = QApplication(sys.argv)
     win = LogWindow()
     win.show()
     app.exec_()
-    return (win.name, str(win.addr), win.prt)
+    return (win.name, win.addr, win.prt)
 
 
 class LogWindow(QMainWindow):
@@ -21,6 +22,10 @@ class LogWindow(QMainWindow):
   
         # Carregando componentes da interface
         self.setupUi()
+
+        self.name = False
+        self.addr = False
+        self.prt = False
 
 
     def keyPressEvent(self, event):
@@ -207,15 +212,15 @@ class LogWindow(QMainWindow):
 
     def login(self):
         self.name = self.username.text()
-        self.addr = self.adress.text()
+        self.addr = str(self.adress.text())
         self.prt = self.port.text()
 
         if len(self.name)==0:
-            self.name = 'Test'
+            self.name = 'User'
         if len(self.addr)==0:
-            self.addr = '192.168.1.113'
+            self.addr = SERVER
         if len(self.prt)==0:
-            self.prt = '5001'
+            self.prt = PORT
         self.close()
 
         # if len(self.name) == 0 or len(self.addr) == 0 or len(self.prt) == 0:

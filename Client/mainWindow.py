@@ -44,18 +44,22 @@ class MainWindow(QMainWindow):
 
 
 	def send(self):
-		msg = self.msg.text()
-		if(msg == ''):
-			return
-		else:
-			message, send_length = encodeMsg(msg)
-			self.client.send(send_length)
-			self.client.send(message)
+		try:
+			msg = self.msg.text()
+			if(msg == ''):
+				return
+			else:
+				message, send_length = encodeMsg(msg)
+				self.client.send(send_length)
+				self.client.send(message)
 
-			if (msg == DISCONNECT_MESSAGE):
-				self.disconnect()
+				if (msg == DISCONNECT_MESSAGE):
+					self.disconnect()
 
-			self.msg.setText('')
+				self.msg.setText('')
+		except:
+			print("ERRO no servidor")
+			self.disconnect()
 
 
 	def recvMsg(self):
@@ -101,8 +105,9 @@ class MainWindow(QMainWindow):
 
 		# Encerrando conexão socket
 		print("Você está se desconectando...")
-		self.client.close()
 		self.online = False
+		self.close()
+		self.client.close()
 		print("[CONEXÃO ENCERRADA]")
 
 
@@ -275,7 +280,7 @@ class MainWindow(QMainWindow):
 		self.menuSobre.setTitle(_translate("MainWindow", "Sobre"))
 		self.actionQuit.setText(_translate("MainWindow", "Quit"))
 		self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
-		#self.actionQuit.triggered.connect(self.close())
+		self.actionQuit.triggered.connect(self.closeEvent)
 		self.actionLimpar.setText(_translate("MainWindow", "Limpar Chat"))
 		self.actionLimpar.setShortcut(_translate("MainWindow", "Escape"))
 		self.actionLimpar.triggered.connect(self.clearChat)
@@ -290,11 +295,21 @@ class MainWindow(QMainWindow):
 	
 
 	def closeEvent(self, event):
-		message, send_length = encodeMsg(DISCONNECT_MESSAGE)
-		self.client.send(send_length)
-		self.client.send(message)
-		self.disconnect()
-		#event.accept()
+		try:
+			if(event):
+				message, send_length = encodeMsg(DISCONNECT_MESSAGE)
+				self.client.send(send_length)
+				self.client.send(message)
+				self.disconnect()
+				self.close()
+		except:
+			pass
+
+		# 
+		# 	pass
+		# 	#self.disconnect()
+		# else:
+		# 	
 
 
 	def clearChat(self):

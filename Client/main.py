@@ -7,7 +7,8 @@ def start():
     name, addr, port = createLogWindow()
 
     # Iniciando Janela do chat, que inicia a classe client
-    createMainWindow(name, addr, port)
+    if (name and addr and port):
+        createMainWindow(name, addr, port)
 
 if __name__ == "__main__":
     start()

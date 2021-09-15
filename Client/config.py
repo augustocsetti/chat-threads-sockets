@@ -7,7 +7,7 @@ FORMAT = "utf-8"
 #Variáveis de teste
 USERNAME = "Test"
 ADDR = "localhost"
-PORT = 5001
+PORT = 5000
 
 # SOCKET CONN
 SERVER = socket.gethostbyname(socket.gethostname())
