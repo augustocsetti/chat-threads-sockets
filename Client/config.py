@@ -4,6 +4,11 @@ import socket
 HEADER = 64
 FORMAT = "utf-8"
 
+#Variáveis de teste
+USERNAME = "Test"
+ADDR = "localhost"
+PORT = 5001
+
 # SOCKET CONN
 SERVER = socket.gethostbyname(socket.gethostname())
 USERNAME = "TEST"
@@ -12,10 +17,13 @@ ADDR = (SERVER, PORT)
 
 # SYSTEM MSGM
 DISCONNECT_MESSAGE = "[DISCONNECT]"
-OP = 0
-NEW_MESSAGE = 0
+
+NEW_MESSAGE = '0'
+NAME_LIST = '1'
+CLEAR_LIST = '2'
+
 DEFINE_NAME = 1
 PROBLEM_NAME = 2
-NAME_LIST = '3'
-NAME_LIST_END = 'l'
+
+
 

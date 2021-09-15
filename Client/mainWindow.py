@@ -1,13 +1,11 @@
-from client import Client, DISCONNECT_MESSAGE
-
+import threading
+import socket
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from config import*
 
-#Variáveis de teste
-USERNAME = "Test"
-ADDR = "localhost"
-PORT = 5001
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow, QApplication, QTextBrowser
+
 
 def createMainWindow(name, address, port):
 
@@ -20,26 +18,29 @@ def createMainWindow(name, address, port):
 
 class MainWindow(QMainWindow):
 
-	def __init__(self, name, address, port):
+	def __init__(self, username, address, port):
 		# Inicializando construtor da janela
 		super(QMainWindow, self).__init__()
-        
+
 		# Carregando componentes da interface
 		self.setupUi()
 
-		# Inicializando funções de comunicação do cliente
-		self.client = Cli
+        # Iniciando conexão com servidor
+		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		ADDR = (address, int(port))
+		self.client.connect(ADDR)
+		self.online = True
 
+        # Criando e enviando nome do usuário
+		self.name = username
+		message, send_length = encodeMsg(self.name)
+		self.client.send(send_length)
+		self.client.send(message)
 
-	def closeEvent(self, event):
-		self.client.sendMsg(DISCONNECT_MESSAGE)
-		#event.accept()
-
-
-	def keyPressEvent(self, event):
-		key = event.key()
-		if key == QtCore.Qt.Key_Return:
-			self.send()
+		# Criando Thread para receber mensagens
+		self.thread_recv = threading.Thread(target=self.recvMsg, args=())
+		self.thread_recv.start()
+		# self.recvMsg()
 
 
 	def send(self):
@@ -47,14 +48,66 @@ class MainWindow(QMainWindow):
 		if(msg == ''):
 			return
 		else:
-			self.client.sendMsg(msg)
-			self.chat.append(f"Você: {msg}")
+			message, send_length = encodeMsg(msg)
+			self.client.send(send_length)
+			self.client.send(message)
+
+			if (msg == DISCONNECT_MESSAGE):
+				self.disconnect()
+
 			self.msg.setText('')
-			#print(msg)
+
+
+	def recvMsg(self):
+		# Loop de recebimento de msgm
+		while self.online:
+			try:
+				# Recebe a mensagem
+				msg_lenght = self.client.recv(HEADER).decode(FORMAT)
+				if msg_lenght:
+					msg_lenght = int(msg_lenght)
+					msg = self.client.recv(msg_lenght).decode(FORMAT)
+					
+					self.handleMsg(msg)
+					
+					msg_lenght = ''
+			except:
+				self.online = False
+
+
+	def handleMsg(self, msg):
+
+		op = msg[0]
+		msg_list = list(msg)
+		msg_list.pop(0)
+		message = "".join(msg_list)
+		
+		# Recebe mensagem
+		if (op == NEW_MESSAGE):	
+			self.chat.append(msg)
+		
+		# # Recebe lista de usuários conectados
+		elif (op == CLEAR_LIST):
+		 	#self.userList.clear()
+			self.userList.clear()
+
+		# Limpa lista de conexão
+		elif (op == NAME_LIST):
+		 	self.userList.insertPlainText(message)
+
+
+	def disconnect(self):
+
+		# Encerrando conexão socket
+		print("Você está se desconectando...")
+		self.client.close()
+		self.online = False
+		print("[CONEXÃO ENCERRADA]")
 
 
 	def updateUserList(self, list):
 		self.userList.clear()
+
 
 	def setupUi(self):
 
@@ -124,6 +177,7 @@ class MainWindow(QMainWindow):
 
 		# LISTA USUÁRIOS CONECTADOS
 		self.userList = QtWidgets.QTextBrowser(self.centralwidget)
+		QtCore.QMetaObject.connectSlotsByName(self.userList)
 		self.userList.setMinimumSize(QtCore.QSize(250, 200))
 		self.userList.setMaximumSize(QtCore.QSize(200, 500))
 		font = QtGui.QFont()
@@ -205,7 +259,7 @@ class MainWindow(QMainWindow):
 		self.completeUi()
 		
 		QtCore.QMetaObject.connectSlotsByName(self)
-	
+
 
 	def completeUi(self):
 		_translate = QtCore.QCoreApplication.translate
@@ -226,9 +280,35 @@ class MainWindow(QMainWindow):
 		self.actionLimpar.triggered.connect(self.clearChat)
 		self.actionNova_Conex_o.setText(_translate("MainWindow", "Nova Conexão"))
 		self.actionNova_Conex_o.setShortcut(_translate("MainWindow", "Ctrl+N"))
-		
+	
+	
+	def keyPressEvent(self, event):
+		key = event.key()
+		if key == QtCore.Qt.Key_Return:
+			self.send()
+	
+
+	def closeEvent(self, event):
+		message, send_length = encodeMsg(DISCONNECT_MESSAGE)
+		self.client.send(send_length)
+		self.client.send(message)
+		self.disconnect()
+		#event.accept()
+
+
 	def clearChat(self):
 		self.chat.clear()
+
+	def clearConnects(self):
+		self.userList.clear()
+
+# SUPORT FUNCTIONS
+def encodeMsg(msg):
+    message = str(msg).encode(FORMAT)
+    msg_length = len(message)
+    send_length = str(msg_length).encode(FORMAT)
+    send_length += b' ' * (HEADER - len(send_length))
+    return message, send_length
 
 
 if __name__ == "__main__":

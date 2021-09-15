@@ -22,7 +22,7 @@ class Server():
         self.online = True
 
         print("Inicializando servidor...")
-        # Inicia o servidor AQUI
+        # Inicia o servidor
         self.s.listen()
         print(f"[LISTENING] Server is listening on {SERVER} port {PORT}")
 
@@ -44,7 +44,8 @@ class Server():
                 self.username.append(username)
                 self.connected.append(conn)
 
-                self.listUser(ADD, username)
+                # Atualizando lista de conexão do cliente
+                self.listUser()
 
                 # Criando Thread para novo cliente
                 thread = threading.Thread(target=self.update, args=(conn, username))
@@ -53,8 +54,7 @@ class Server():
                 # Aviso de nova conexão
                 msg = f"{username} entrou no chat. Conexões ativas {len(self.connected)}."
                 self.serverMsg(msg)
-                print(msg)
-                
+ 
             except:
                 print("[CLOSING] Server is closing.")
                 self.s.close()
@@ -73,14 +73,16 @@ class Server():
         _date = date()
         msg = (f"{username} saiu da chat ({_date}).")
         self.serverMsg(msg)
-        print(msg)
+
+        # Atualizando lista de conexão do cliente
+        self.listUser()
 
 
     def update(self, conn, username):
         client_online = True
         while client_online:
             try:
-                msg_lenght = conn.recv(HEADER).decode(FORMAT) #wait
+                msg_lenght = conn.recv(HEADER).decode(FORMAT)
                 if msg_lenght:
                     msg_lenght = int(msg_lenght)
                     msg = conn.recv(msg_lenght).decode(FORMAT)
@@ -90,27 +92,41 @@ class Server():
                         self.unsubscribe(conn, username)
                         client_online = False
                         return
-                    
+                
                     # Loop de envio a outros usuários
+                    #self.handleMsg(msg, conn, username)
                     self.globalMsg(msg, conn, username)
+                    msg = ''
+                
 
             except: # Falha de conexão
+                print("Falhou")
                 self.unsubscribe(conn, username)
                 client_online = False
                 return
 
+   
+    def handleMsg(self, msg, conn, username):
+        if ('op' == NEW_MESSAGE):
+            self.globalMsg(msg, conn, username)
+            
+        elif ('op' == 1):
+            pass
 
-    def listUser(self, op, n):
-        message, send_length = encodeMsg(f"{NAME_LIST}{n}")
+
+    def listUser(self):
+
         for client in self.connected:
+            # Limpando lista de conexão
+            message, send_length = encodeMsg(f"{CLEAR_LIST}")            
             client.send(send_length)
             client.send(message)
 
-        # for user in self.username:
-        #     message, send_length = encodeMsg(f"{NAME_LIST}{user}")
-        #     for client in self.connected:
-        #         client.send(send_length)
-        #         client.send(message)
+            # Enviando novos usuários
+            for user in self.username:
+                message, send_length = encodeMsg(f"{NAME_LIST}{user}")
+                client.send(send_length)
+                client.send(message)
 
         # message, send_length = encodeMsg(f"{NAME_LIST_END}")
         # client.send(send_length)
@@ -119,9 +135,9 @@ class Server():
 
     # Func. de disparo de msgns servidor-usuário
     def serverMsg(self, msg):
-        # Adicionando TAG de msgm
-        msg = (f"{NEW_MSG}{msg}")
-        
+
+        print(msg)       
+
         # Recebendo variáveis já codificados para envio
         message, send_length = encodeMsg(msg)
 
@@ -132,20 +148,21 @@ class Server():
 
     # Func. de disparo de msgns usuário-usuário
     def globalMsg(self, msg, conn, username):
-        # Adicionando TAG de msgm
-        msg = (f"{NEW_MSG}{msg}")
 
         # Recebendo data e hora
         _date = date()
 
         # Modelando a mensagem para os clientes e para o remetente
-        msg = (f"{NEW_MSG}{username} ({_date}): {msg}")
-        msgSelf = (f"{NEW_MSG}Eu ({_date}): {msg}")
+        msgAll = (f"{username} ({_date}): {msg}")
+        msgSelf = (f"Eu ({_date}): {msg}")
+        print(msgAll)
+        msgAll = (f"{NEW_MESSAGE}{msgAll}")
+        msgSelf = (f"{NEW_MESSAGE}{msgSelf}")
 
-        print(msg)
+        
 
         # Recebendo variáveis já codificados para envio
-        message, send_length = encodeMsg(msg)
+        message, send_length = encodeMsg(msgAll)
         messageSelf, send_lengthSelf = encodeMsg(msgSelf)
 
         # Enviando para todos os clientes conectados

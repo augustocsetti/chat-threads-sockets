@@ -8,7 +8,7 @@ Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizand
 - Compilar arqv
 
 - Criar classe cliente para manipular características no servidor
-
+- Criar a tela de login e a principal num programa só para lidar nomes repetidos
 python
 pip
 
