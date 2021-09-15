@@ -24,7 +24,7 @@ class Client():
         # (PARA USAR NO TERMINAL) Iniciando Loop de envio de mensagens
         # self.thread_send = threading.Thread(target=self.main_loop, args=())
         # self.thread_send.start()
-        # #self.main_loop()      
+        self.main_loop()      
 
 
     def main_loop(self):
@@ -64,7 +64,7 @@ class Client():
                 if msg_lenght:
                     msg_lenght = int(msg_lenght)
                     msg = self.client.recv(msg_lenght).decode(FORMAT)
-                    self.handleMsg(msg)
+                    print(msg)
             except:
                 self.online = False
 
@@ -76,16 +76,8 @@ class Client():
         self.client.close()
         self.online = False
         print("[CONEXÃO ENCERRADA]")
+    
 
-
-    def handleMsg(self, msg):
-        print(f"OPM:{msg[OP]} NL:{NAME_LIST}")
-        if (msg[OP] == NAME_LIST):
-            print("LOOP")
-            msg.pop(0)
-            print(f"Mensagem tratada:")
-            self.userList.append(msg)
-                
 # SUPORT FUNCTIONS
 def encodeMsg(msg):
     message = str(msg).encode(FORMAT)
@@ -95,8 +87,11 @@ def encodeMsg(msg):
     return message, send_length
 
 
-def createClient(username, server, port):
-    c = Client(username, server, port)
+    
 
 if(__name__ == "__main__"):
-    createClient(input("Insira seu nome: "), SERVER, PORT)
+    print("========== AbachaT Terminal ==========\n")
+    
+    username = input("Insira seu nome: ")
+    
+    c = Client(username, SERVER, PORT)

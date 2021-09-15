@@ -84,16 +84,17 @@ class MainWindow(QMainWindow):
 		
 		# Recebe mensagem
 		if (op == NEW_MESSAGE):	
-			self.chat.append(msg)
+			self.chat.append(message)
 		
 		# # Recebe lista de usuários conectados
 		elif (op == CLEAR_LIST):
-		 	#self.userList.clear()
-			self.userList.clear()
+		 	pass
+			#self.userList.clear()
 
 		# Limpa lista de conexão
 		elif (op == NAME_LIST):
-		 	self.userList.insertPlainText(message)
+			self.userList.append(message)
+		 	#self.userList.insertPlainText(message)
 
 
 	def disconnect(self):

@@ -5,6 +5,7 @@ Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizand
 - Enviar com enter
 - Pesquisar socket rodar em máquinas diferentes
 - Adicionar ícone miniatura (criar ícone)
+- Botão para saída do terminal
 - Compilar arqv
 
 - Criar classe cliente para manipular características no servidor

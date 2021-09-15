@@ -46,9 +46,6 @@ class Server():
                 self.username.append(username)
                 self.connected.append(conn)
 
-                # Atualizando lista de conexão do cliente
-                self.listUser()
-
                 # Criando Thread para novo cliente
                 thread = threading.Thread(target=self.update, args=(conn, username))
                 thread.start()
@@ -76,9 +73,6 @@ class Server():
         msg = (f"{username} saiu da chat ({_date}).")
         self.serverMsg(msg)
 
-        # Atualizando lista de conexão do cliente
-        self.listUser()
-
 
     def update(self, conn, username):
         client_online = True
@@ -96,43 +90,22 @@ class Server():
                         return
                 
                     # Loop de envio a outros usuários
-                    #self.handleMsg(msg, conn, username)
                     self.globalMsg(msg, conn, username)
                     msg = ''
                 
 
             except: # Falha de conexão
-                print("Falhou")
                 self.unsubscribe(conn, username)
                 client_online = False
                 return
 
-   
+    # Função de definição de operação
     def handleMsg(self, msg, conn, username):
         if ('op' == NEW_MESSAGE):
             self.globalMsg(msg, conn, username)
             
         elif ('op' == 1):
             pass
-
-
-    def listUser(self):
-
-        for client in self.connected:
-            # Limpando lista de conexão
-            message, send_length = encodeMsg(f"{CLEAR_LIST}")            
-            client.send(send_length)
-            client.send(message)
-
-            # Enviando novos usuários
-            for user in self.username:
-                message, send_length = encodeMsg(f"{NAME_LIST}{user}")
-                client.send(send_length)
-                client.send(message)
-
-        # message, send_length = encodeMsg(f"{NAME_LIST_END}")
-        # client.send(send_length)
-        # client.send(message)
 
 
     # Func. de disparo de msgns servidor-usuário
@@ -157,11 +130,7 @@ class Server():
         # Modelando a mensagem para os clientes e para o remetente
         msgAll = (f"{username} ({_date}): {msg}")
         msgSelf = (f"Eu ({_date}): {msg}")
-        print(msgAll)
-        msgAll = (f"{NEW_MESSAGE}{msgAll}")
-        msgSelf = (f"{NEW_MESSAGE}{msgSelf}")
-
-        
+        print(msgAll)       
 
         # Recebendo variáveis já codificados para envio
         message, send_length = encodeMsg(msgAll)
