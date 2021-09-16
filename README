@@ -2,14 +2,14 @@ chat-threads-sockets
 
 Tarefa para a disciplina de Sistemas Distribuídos. Chat multiusuário utilizando Threads e Sockets.
 
-- Enviar com enter
-- Pesquisar socket rodar em máquinas diferentes
+- Pesquisar socket rodar em máquinas diferentes (NGROK)
 - Adicionar ícone miniatura (criar ícone)
 - Botão para saída do terminal
 - Compilar arqv
 
 - Criar classe cliente para manipular características no servidor
-- Criar a tela de login e a principal num programa só para lidar nomes repetidos
+- Mandar referência ao nome do chat
+
 python
 pip
 

@@ -1,7 +1,9 @@
 import threading
 import socket
+import sys
 from datetime import datetime
 
+from serverClient import Client
 from config import *
 
 
@@ -14,9 +16,8 @@ class Server():
         # Atrela conexão a server e port definidos
         self.s.bind(ADDR)
 
-        # Lista de usuários conectados
-        self.connected = []
-        self.username = []
+        # Lista de usuários conectados 
+        self.clients = []
 
         # Variável do Loop principal
         self.online = True
@@ -26,10 +27,15 @@ class Server():
         
         # Inicia o servidor
         self.s.listen()
+
         print(f"[LISTENING] Server is listening on {SERVER} port {PORT}")
 
+        exit = threading.Thread(target=self.closeServer, args=())
+        exit.start()
+
+        # Inicia inscrição
         self.subscribe()
-        
+
 
     def subscribe(self):
         while self.online:
@@ -42,19 +48,15 @@ class Server():
                 username_lenght = int(conn.recv(HEADER).decode(FORMAT)) # recebendo e decodificando tamanho do nome
                 username = conn.recv(username_lenght).decode(FORMAT)
 
-                # Adicionando às listas de clientes o nome e a conexão
-                self.username.append(username)
-                self.connected.append(conn)
+                # Adicionando à lista de clientes a classe do cliente aceita
+                c = Client(self, username, conn)
+                self.clients.append(c)
 
                 # Atualizando lista de conexão do cliente
-                self.listUser()
-
-                # Criando Thread para novo cliente
-                thread = threading.Thread(target=self.update, args=(conn, username))
-                thread.start()
+                self.userListUpdate()
 
                 # Aviso de nova conexão
-                msg = f"{username} entrou no chat. Conexões ativas {len(self.connected)}."
+                msg = f"{username} entrou no chat. Conexões ativas {len(self.clients)}."
                 self.serverMsg(msg)
  
             except:
@@ -64,119 +66,85 @@ class Server():
                 return
 
 
-    def unsubscribe(self, conn, username):
+    def unsubscribe(self, client):
         # Remova usuário das listas e encerra comunicação
-        index = self.connected.index(conn)
-        self.username.pop(index)
-        self.connected.remove(conn)
+        self.clients.remove(client)
  
-        conn.close()
+        client.conn.close()
 
         _date = date()
-        msg = (f"{username} saiu da chat ({_date}).")
+        msg = (f"{client.username} saiu da chat ({_date}).")
         self.serverMsg(msg)
 
         # Atualizando lista de conexão do cliente
-        self.listUser()
-
-
-    def update(self, conn, username):
-        client_online = True
-        while client_online:
-            try:
-                msg_lenght = conn.recv(HEADER).decode(FORMAT)
-                if msg_lenght:
-                    msg_lenght = int(msg_lenght)
-                    msg = conn.recv(msg_lenght).decode(FORMAT)
-
-                    # Mensagem de desconexão
-                    if msg == DISCONNECT_MESSAGE:
-                        self.unsubscribe(conn, username)
-                        client_online = False
-                        return
-                
-                    # Loop de envio a outros usuários
-                    #self.handleMsg(msg, conn, username)
-                    self.globalMsg(msg, conn, username)
-                    msg = ''
-                
-
-            except: # Falha de conexão
-                print("Falhou")
-                self.unsubscribe(conn, username)
-                client_online = False
-                return
-
-   
-    def handleMsg(self, msg, conn, username):
-        if ('op' == NEW_MESSAGE):
-            self.globalMsg(msg, conn, username)
-            
-        elif ('op' == 1):
-            pass
-
-
-    def listUser(self):
-
-        for client in self.connected:
-            # Limpando lista de conexão
-            message, send_length = encodeMsg(f"{CLEAR_LIST}")            
-            client.send(send_length)
-            client.send(message)
-
-            # Enviando novos usuários
-            for user in self.username:
-                message, send_length = encodeMsg(f"{NAME_LIST}{user}")
-                client.send(send_length)
-                client.send(message)
-
-        # message, send_length = encodeMsg(f"{NAME_LIST_END}")
-        # client.send(send_length)
-        # client.send(message)
-
+        self.userListUpdate()
 
     # Func. de disparo de msgns servidor-usuário
     def serverMsg(self, msg):
 
-        print(msg)       
+        #print(msg)
 
         # Recebendo variáveis já codificados para envio
         message, send_length = encodeMsg(msg)
 
-        for client in self.connected:
-            client.send(send_length)
-            client.send(message)
-
+        for client in self.clients:
+            client.conn.send(send_length)
+            client.conn.send(message)
 
     # Func. de disparo de msgns usuário-usuário
-    def globalMsg(self, msg, conn, username):
+    def globalMsg(self, msg, client):
 
         # Recebendo data e hora
         _date = date()
 
         # Modelando a mensagem para os clientes e para o remetente
-        msgAll = (f"{username} ({_date}): {msg}")
+        msgAll = (f"{client.username} ({_date}): {msg}")
         msgSelf = (f"Eu ({_date}): {msg}")
-        print(msgAll)
+        
+        #print(msgAll) 
+        
         msgAll = (f"{NEW_MESSAGE}{msgAll}")
         msgSelf = (f"{NEW_MESSAGE}{msgSelf}")
-
-        
 
         # Recebendo variáveis já codificados para envio
         message, send_length = encodeMsg(msgAll)
         messageSelf, send_lengthSelf = encodeMsg(msgSelf)
 
         # Enviando para todos os clientes conectados
-        for client in self.connected:
+        for c in self.clients:
             # Se o cliente a enviar não for remetente envia msg com nome do usuário
-            if(client != conn):
-                client.send(send_length)
-                client.send(message)
+            if(c.conn != client.conn):
+                c.conn.send(send_length)
+                c.conn.send(message)
             # Se for envia modelo Self com você ao invés do nome
             else:
-                client.send(send_lengthSelf)
-                client.send(messageSelf)
+                c.conn.send(send_lengthSelf)
+                c.conn.send(messageSelf)
+
+
+    def userListUpdate(self):
+
+        for c in self.clients:
+            # Limpando lista de conexão
+            message, send_length = encodeMsg(f"{CLEAR_LIST}")            
+            c.conn.send(send_length)
+            c.conn.send(message)
+
+            # Enviando novos usuários
+            for client in self.clients:
+                if(c.conn == client.conn):
+                    message, send_length = encodeMsg(f"{NAME_LIST}{client.username} (Você)")
+                else:
+                    message, send_length = encodeMsg(f"{NAME_LIST}{client.username}")
+                c.conn.send(send_length)
+                c.conn.send(message)
+
+
+    def closeServer(self):
+        input("Pressione [ENTER] para encerrar o servidor\n")
+        self.online = False
+        self.s.close()
+        sys.exit()
 
 
 def date():

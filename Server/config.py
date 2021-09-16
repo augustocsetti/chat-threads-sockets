@@ -4,7 +4,7 @@ HEADER = 64
 FORMAT = "utf-8"
 
 SERVER = socket.gethostbyname(socket.gethostname())
-PORT = 5001
+PORT = 5000
 ADDR = (SERVER, PORT)
 
 # Códigos para mensagem do sistema

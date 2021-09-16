@@ -11,11 +11,17 @@ def createMainWindow(name, address, port):
 
 	app = QApplication(sys.argv)
 	win = MainWindow(name, address, port)
-	win.show()
 
+	win.show()
 	app.exec_()
 
 
+# Classe para definir sinais enviados pela thread_recv a janela principal 
+class MySignal(QtCore.QObject):
+	listUser = QtCore.pyqtSignal(str) # ação sobre lista de usuários conectados
+	chatLabel = QtCore.pyqtSignal(str) # ação sobre text browser do chat
+	
+# Janela principal do cliente
 class MainWindow(QMainWindow):
 
 	def __init__(self, username, address, port):
@@ -25,10 +31,21 @@ class MainWindow(QMainWindow):
 		# Carregando componentes da interface
 		self.setupUi()
 
+		self.signal = MySignal()
+		self.signal.listUser.connect(self.listUpdate)
+		self.signal.chatLabel.connect(self.chatUpdate)
+
         # Iniciando conexão com servidor
 		self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		ADDR = (address, int(port))
-		self.client.connect(ADDR)
+
+		try:
+			self.client.connect(ADDR)
+
+		except Exception as error:
+			print(f"[PROBLEMA DE CONEXÃO]\n{error}")
+			sys.exit()	
+
 		self.online = True
 
         # Criando e enviando nome do usuário
@@ -36,19 +53,20 @@ class MainWindow(QMainWindow):
 		message, send_length = encodeMsg(self.name)
 		self.client.send(send_length)
 		self.client.send(message)
-
+		
 		# Criando Thread para receber mensagens
-		self.thread_recv = threading.Thread(target=self.recvMsg, args=())
+		self.thread_recv = threading.Thread(target=self.recvMsg, args=[self])
 		self.thread_recv.start()
-		# self.recvMsg()
 
 
 	def send(self):
 		try:
 			msg = self.msg.text()
+		
 			if(msg == ''):
 				return
 			else:
+				msg = '0' + msg
 				message, send_length = encodeMsg(msg)
 				self.client.send(send_length)
 				self.client.send(message)
@@ -62,7 +80,8 @@ class MainWindow(QMainWindow):
 			self.disconnect()
 
 
-	def recvMsg(self):
+	def recvMsg(self, win):
+		a = win
 		# Loop de recebimento de msgm
 		while self.online:
 			try:
@@ -72,14 +91,14 @@ class MainWindow(QMainWindow):
 					msg_lenght = int(msg_lenght)
 					msg = self.client.recv(msg_lenght).decode(FORMAT)
 					
-					self.handleMsg(msg)
+					self.handleMsg(msg, a)
 					
 					msg_lenght = ''
 			except:
 				self.online = False
 
 
-	def handleMsg(self, msg):
+	def handleMsg(self, msg, win):
 
 		op = msg[0]
 		msg_list = list(msg)
@@ -88,27 +107,25 @@ class MainWindow(QMainWindow):
 		
 		# Recebe mensagem
 		if (op == NEW_MESSAGE):	
-			self.chat.append(message)
+			win.signal.chatLabel.emit(message)
 		
 		# # Recebe lista de usuários conectados
 		elif (op == CLEAR_LIST):
-		 	pass
-			#self.userList.clear()
+			win.signal.listUser.emit('')
 
 		# Limpa lista de conexão
 		elif (op == NAME_LIST):
-			self.userList.append(message)
-		 	#self.userList.insertPlainText(message)
+			win.signal.listUser.emit(message)
 
 
 	def disconnect(self):
 
 		# Encerrando conexão socket
-		print("Você está se desconectando...")
+		self.chat.append("Você está se desconectando...")
 		self.online = False
-		self.close()
 		self.client.close()
-		print("[CONEXÃO ENCERRADA]")
+		self.chat.append("[CONEXÃO ENCERRADA]")
+		self.close()
 
 
 	def updateUserList(self, list):
@@ -183,7 +200,7 @@ class MainWindow(QMainWindow):
 
 		# LISTA USUÁRIOS CONECTADOS
 		self.userList = QtWidgets.QTextBrowser(self.centralwidget)
-		QtCore.QMetaObject.connectSlotsByName(self.userList)
+		#QtCore.QMetaObject.connectSlotsByName(self.userList)
 		self.userList.setMinimumSize(QtCore.QSize(250, 200))
 		self.userList.setMaximumSize(QtCore.QSize(200, 500))
 		font = QtGui.QFont()
@@ -251,74 +268,98 @@ class MainWindow(QMainWindow):
 		self.actionLimpar = QtWidgets.QAction(self)
 		self.actionLimpar.setObjectName("actionLimpar")
 
-		self.actionNova_Conex_o = QtWidgets.QAction(self)
-		self.actionNova_Conex_o.setObjectName("actionNova_Conex_o")
+		# Define ações e objetos ao acessar a barra de menu
+		self.actionNova_Conex_o = QtWidgets.QAction(self) # cria menu
+		self.actionNova_Conex_o.setObjectName("actionNova_Conex_o") #
 		self.menuOptions.addAction(self.actionNova_Conex_o)
 		self.menuOptions.addAction(self.actionLimpar)
-		self.menuOptions.addSeparator()
+		self.menuOptions.addSeparator() # separador
 		self.menuOptions.addAction(self.actionQuit)
 		self.menubar.addAction(self.menuOptions.menuAction())
 		self.menubar.addAction(self.menuSobre.menuAction())
 
 		self.setCentralWidget(self.centralwidget) 
 		
+		# Chama função para finalizar interface
 		self.completeUi()
 		
+		# Conecta slots a todos objetos filhos da janela principal
+		# permitindo que eles emitam sinais
 		QtCore.QMetaObject.connectSlotsByName(self)
 
-
+	# MENU - Seta triggers do menu, nomenclatura e atalhos da janela
 	def completeUi(self):
+		
+		# Variável que ajuda a definir o escopo de objeto referenciado
 		_translate = QtCore.QCoreApplication.translate
+		
+		# Seta place holde da caixa de mensagem, para que o usuário digite
+		self.msg.setPlaceholderText(QtCore.QCoreApplication.translate("self", u"Escreva uma mensagem", None))
+
+		# Setando títulos das abas do menu e das labels da janela
 		self.setWindowTitle(_translate("MainWindow", "Abachat App"))
+		self.titulo.setText(_translate("MainWindow", "Abachat"))
+		self.menuOptions.setTitle(_translate("MainWindow", "Menu"))
+		self.actionNova_Conex_o.setText(_translate("MainWindow", "Nova Conexão"))
+		self.actionLimpar.setText(_translate("MainWindow", "Limpar Chat"))
+		self.actionQuit.setText(_translate("MainWindow", "Quit"))
+		self.menuSobre.setTitle(_translate("MainWindow", "Sobre"))
 		self.label.setText(_translate("MainWindow", "Usuários Conectados"))
 		self.sendBtn.setText(_translate("MainWindow", "Enviar"))
-		self.titulo.setText(_translate("MainWindow", "Abachat"))
-		self.msg.setPlaceholderText(QtCore.QCoreApplication.translate("self", u"Escreva uma mensagem", None))
-		
-		# Menu
-		self.menuOptions.setTitle(_translate("MainWindow", "Menu"))
-		self.menuSobre.setTitle(_translate("MainWindow", "Sobre"))
-		self.actionQuit.setText(_translate("MainWindow", "Quit"))
-		self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
-		self.actionQuit.triggered.connect(self.closeEvent)
-		self.actionLimpar.setText(_translate("MainWindow", "Limpar Chat"))
-		self.actionLimpar.setShortcut(_translate("MainWindow", "Escape"))
-		self.actionLimpar.triggered.connect(self.clearChat)
-		self.actionNova_Conex_o.setText(_translate("MainWindow", "Nova Conexão"))
+
+		# Setando atalhos das abas
 		self.actionNova_Conex_o.setShortcut(_translate("MainWindow", "Ctrl+N"))
-	
-	
+		self.actionLimpar.setShortcut(_translate("MainWindow", "Escape"))
+		self.actionQuit.setShortcut(_translate("MainWindow", "Ctrl+Q"))
+
+		# Definindo rotinas (triggers) para quando uma das abas for acessada
+		self.actionQuit.triggered.connect(self.close)
+		self.actionLimpar.triggered.connect(self.clearChat)
+
+	# Detecta a tecla Enter para enviar mensagem
 	def keyPressEvent(self, event):
+		# Se um tecla for precionada ela é salva
 		key = event.key()
+		# Se for a tecla enter chama-se a função de envio
 		if key == QtCore.Qt.Key_Return:
 			self.send()
 	
-
+	# Capta o evendo de fechamento da janela para encerrar conexão
 	def closeEvent(self, event):
 		try:
+			# Se o evento de fechamento for chamado
 			if(event):
+				# Envia mensagem ao servidor para desconectar
 				message, send_length = encodeMsg(DISCONNECT_MESSAGE)
 				self.client.send(send_length)
 				self.client.send(message)
+				# Chama rotina para encerrar o cliente
 				self.disconnect()
-				self.close()
+				
 		except:
-			pass
+			# Se der erro significa que a desconexão já foi feita
+			pass	
 
-		# 
-		# 	pass
-		# 	#self.disconnect()
-		# else:
-		# 	
+	# Adiciona mensagem ao Text Browser do chat
+	def chatUpdate(self, str):
+		self.chat.append(str)
 
-
+	# Limpando o chat
 	def clearChat(self):
+		# Reseta o Text Browser do chat
 		self.chat.clear()
 
-	def clearConnects(self):
-		self.userList.clear()
+	# Atualizando lista de usuários conectados
+	def listUpdate(self, str):
+		# Se o sinal emitido for vazio reseta a lista
+		if(str == ''):
+			self.userList.clear()
+		else:
+		# Se não adiciona o nome enviado
+			self.userList.append(str)
 
-# SUPORT FUNCTIONS
+
+# FUNÇÕES DE SUPORTE
 def encodeMsg(msg):
     message = str(msg).encode(FORMAT)
     msg_length = len(message)
@@ -328,4 +369,4 @@ def encodeMsg(msg):
 
 
 if __name__ == "__main__":
-	createMainWindow(USERNAME, ADDR, PORT)
+	createMainWindow("User", ADDR, PORT)

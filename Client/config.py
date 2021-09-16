@@ -4,15 +4,9 @@ import socket
 HEADER = 64
 FORMAT = "utf-8"
 
-#Variáveis de teste
-USERNAME = "Test"
-ADDR = "localhost"
-PORT = 5000
-
 # SOCKET CONN
 SERVER = socket.gethostbyname(socket.gethostname())
-USERNAME = "TEST"
-PORT = 5001
+PORT = 5000
 ADDR = (SERVER, PORT)
 
 # SYSTEM MSGM
@@ -24,6 +18,3 @@ CLEAR_LIST = '2'
 
 DEFINE_NAME = 1
 PROBLEM_NAME = 2
-
-
-
