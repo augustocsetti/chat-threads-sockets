@@ -56,7 +56,8 @@ class Server():
                 self.userListUpdate()
 
                 # Aviso de nova conexão
-                msg = f"{username} entrou no chat. Conexões ativas {len(self.clients)}."
+                _date = date()
+                msg = f"{NEW_MESSAGE}<p><i>***{username} entrou no chat ({_date}). Conexões ativas {len(self.clients)}.***</i></p>"
                 self.serverMsg(msg)
  
             except:
@@ -69,11 +70,11 @@ class Server():
     def unsubscribe(self, client):
         # Remova usuário das listas e encerra comunicação
         self.clients.remove(client)
- 
-        client.conn.close()
 
+        client.conn.close()
+ 
         _date = date()
-        msg = (f"{client.username} saiu da chat ({_date}).")
+        msg = (f"{NEW_MESSAGE}<p><i>***{client.username} saiu do chat ({_date}). Conexões ativas {len(self.clients)}.***</i></p>")
         self.serverMsg(msg)
 
         # Atualizando lista de conexão do cliente
@@ -88,6 +89,7 @@ class Server():
         message, send_length = encodeMsg(msg)
 
         for client in self.clients:
+            
             client.conn.send(send_length)
             client.conn.send(message)
 
@@ -98,9 +100,9 @@ class Server():
         _date = date()
 
         # Modelando a mensagem para os clientes e para o remetente
-        msgAll = (f"{client.username} ({_date}): {msg}")
-        msgSelf = (f"Eu ({_date}): {msg}")
-        
+        msgAll = (f"<p><u>{client.username}</u> ({_date}):<br>{msg}</p>")
+        msgSelf = (f"<p><b>Eu ({_date}):</b><br>{msg}</p>")
+
         #print(msgAll) 
         
         msgAll = (f"{NEW_MESSAGE}{msgAll}")
@@ -158,6 +160,7 @@ def encodeMsg(msg):
     send_length = str(msg_length).encode(FORMAT)
     send_length += b' ' * (HEADER - len(send_length))
     return message, send_length
+
 
 if ("__main__" == __name__):
     s = Server()

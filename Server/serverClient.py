@@ -14,20 +14,14 @@ class Client():
 
 
     def start(self):
-        client_online = True
-        while client_online:
+        self.clientOnline = True
+        while self.clientOnline:
             try:
                 msg_lenght = self.conn.recv(HEADER).decode(FORMAT)
                 if msg_lenght:
                     msg_lenght = int(msg_lenght)
                     msg = self.conn.recv(msg_lenght).decode(FORMAT)
-
-                    # Mensagem de desconexão
-                    if msg == DISCONNECT_MESSAGE:
-                        self.s.unsubscribe(self)
-                        client_online = False
-                        return
-                
+                    
                     # Loop de envio a outros usuários
                     self.handleMsg(msg)
                     msg = ''
@@ -48,5 +42,6 @@ class Client():
         if (op == NEW_MESSAGE):
             self.s.globalMsg(msg, self)
             
-        elif (op == 1):
-            pass
+        elif (op == DISCONNECT_MESSAGE):
+            self.clientOnline = False
+            self.s.unsubscribe()
