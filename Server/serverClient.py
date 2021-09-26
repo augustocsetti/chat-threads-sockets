@@ -28,7 +28,7 @@ class Client():
     def start(self):
         
         # Enquanto o cliente estiver online recebe mensagem dele
-        while self.clientOnline:
+        while self.clientOnline and self.s.online:
             try:
                 # Recebe o tamanha da mensagem a ler
                 msg_lenght = self.conn.recv(HEADER).decode(FORMAT) # recebendo e decodificando (em utf-8) tamanho do nome

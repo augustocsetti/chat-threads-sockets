@@ -1,6 +1,5 @@
 import threading
 import socket
-import sys
 from datetime import datetime
 
 from serverClient import Client
@@ -14,7 +13,7 @@ from config import *
 
 class Server():
 
-    # Inicializa servidor, worker e threads
+    # Inicializa servidor e threads de encerramento
     def __init__(self):
        
         # Define família e tipo da conexão (AF_INET -> IPV4 | SOCK_STREAM -> TCP)
@@ -44,7 +43,7 @@ class Server():
         # Função de inicialização de inscrições via socket
         self.subscribe()
 
-    # Recebe inscrição de novos usuários
+    # Recebe inscrição de novos usuários e inicializa worker
     def subscribe(self):
        
         # Enquando o servidor estiver ligado
@@ -163,7 +162,6 @@ class Server():
         # Ao receber, seta variável para offline, encerra o socket e fecha app
         self.online = False
         self.s.close()
-        sys.exit()
 
 
 # FUNÇÕES DE SUPORTE
