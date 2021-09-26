@@ -17,7 +17,7 @@ class Client():
         self.username = username # recebe nome de usuário do cliente
         self.conn = conn # recebe o socket do cliente
 
-
+        # Define cliente como online para loop principal
         self.clientOnline = True
 
         # Cria thread para receber msgns do cliente

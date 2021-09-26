@@ -247,8 +247,6 @@ class MainWindow(QMainWindow):
 			self.client.sendMsg(msg, NEW_MESSAGE) # envia TAG de nova msgm
 			self.msg.setText('') # reseta texto
 
-		return
-
 	# Troca de username - JANELA
 	def changeNameWin(self):
 
@@ -300,11 +298,10 @@ class MainWindow(QMainWindow):
 
 	# Troca de username - FUNÇÃO
 	def changeName(self):
-		name = self.newName.text()
-		if(name):
-			self.client.sendMsg(name, CHANGE_NAME)
-			self.nameWin.close()
-		return
+		name = self.newName.text() # recebe nome da caixa de texto
+		if(name): # se houve algum nome escrito
+			self.client.sendMsg(name, CHANGE_NAME) # chamada função de envio do cliente envia TAG
+			self.nameWin.close() # fecha janela de troca de username
 
 	# Sobre - JANELA
 	def sobreWin(self):
