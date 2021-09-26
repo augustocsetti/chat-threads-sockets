@@ -246,6 +246,7 @@ class LogWindow(QMainWindow):
         if key == QtCore.Qt.Key_Return: # se evento for Retur (ENTER) 
             self.login() # chama função de login
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     win = LogWindow()
