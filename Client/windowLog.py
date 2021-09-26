@@ -7,35 +7,42 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 
 from config import*
 
-def createLogWindow():
-    app = QApplication(sys.argv)
-    win = LogWindow()
-    win.show()
-    app.exec_()
+# Função de criação da janela de Log
+def createWindowLog():
+    app = QApplication(sys.argv) # Recebe instância da aplicação em Qt
+    win = LogWindow() # Inicia instância da janela de log
+    win.show() # mostra a janela
+    app.exec_() # interrompe execução da aplicação
+    
+    # Retorna parâmetros do usuário para iniciar chat
     return (win.name, win.addr, win.prt)
 
 
+# Classe da tela de login
+# - cria interface para login
+# - recebe parâmetros para inicializar conexão e aplicação principal
+
 class LogWindow(QMainWindow):
+    
+    # Constrói janela e cria atributos de entrada
     def __init__(self):
+
         # Inicializando construtor da janela
         super(QMainWindow, self).__init__()
   
         # Carregando componentes da interface
         self.setupUi()
 
+        # Inicializa atributos para realizar conexão 
         self.name = False
         self.addr = False
         self.prt = False
 
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == QtCore.Qt.Key_Return:
-            self.login()
-
-
+    # Carrega objetos e layout da interface
     def setupUi(self):
+
         # WINDOW      
+        self.setWindowIcon(QtGui.QIcon(u"img\\miniLogo.png"))
         self.setObjectName("LogWindow") 
         self.resize(470, 602)
         sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
@@ -62,7 +69,7 @@ class LogWindow(QMainWindow):
         font4.setBold(True)
         font4.setWeight(75)
    
-        # MAIN GRID
+        # MAIN GRID - organiza elementos de forma responsiva
         self.centralwidget = QtWidgets.QWidget(self)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -157,7 +164,7 @@ class LogWindow(QMainWindow):
         self.port.setStyleSheet(u"background-color: white")
         self.gridLayout.addWidget(self.port, 11, 1, 1, 1)
 
-        # LABEL ERRO
+        # LABEL ERRO - se o usuário não preencher campos de entrada
         self.error = QLabel(self)
         self.error.setObjectName(u"errorLabel")
         self.error.setFont(font)
@@ -171,30 +178,29 @@ class LogWindow(QMainWindow):
         self.entrar.setBaseSize(QSize(0, 0))
         self.entrar.setFont(font1)
         self.entrar.setCursor(QCursor(Qt.PointingHandCursor))
-        # self.entrar.setStyleSheet(u"background-color: qlineargradient(spread:repeat, x1:1, y1:1, x2:1, y2:0, stop:0 rgba(255, 255, 255, 0));\n color: white;")
-        #self.entrar.setStyleSheet(u"background-color: rgb(85, 170, 0);")
         self.entrar.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(255, 255, 255, 0));\n color: white;")
         self.gridLayout.addWidget(self.entrar, 13, 1, 1, 1)
-        self.entrar.clicked.connect(self.login)
+        self.entrar.clicked.connect(self.login) # Cria sinal para botar enviar
         
         # SPACERS
-        # self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        # self.gridLayout.addItem(self.verticalSpacer_3, 12, 1, 1, 1)
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.gridLayout.addItem(self.verticalSpacer_2, 0, 1, 1, 1)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.gridLayout.addItem(self.verticalSpacer, 14, 1, 1, 1)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.gridLayout.addItem(self.verticalSpacer_2, 0, 1, 1, 1)
 
-
+        # Posiciona grid na janela
         self.setCentralWidget(self.centralwidget)
+
 
         self.completeUi()
 
+        # Conecta slots aos elementos (botão enviar) permitindo que enviem sinais (função de log)
         QMetaObject.connectSlotsByName(self)
 
-
+    # Insere nomes e placeholders dos campos
     def completeUi(self):
-        # Nomes
+
+        # Nomes e textos das tabelas
         self.setWindowTitle(QCoreApplication.translate("self", u"Abachat", None))
         self.label_4.setText(QCoreApplication.translate("self", u"Porta", None))
         self.label_3.setText(QCoreApplication.translate("self", u"Endere\u00e7o", None))
@@ -204,17 +210,20 @@ class LogWindow(QMainWindow):
         self.titulo.setText(QCoreApplication.translate("self", u"Abachat", None))
         self.logo.setText("")
 
-        # Place Holders
+        # Place Holders dos campos
         self.username.setPlaceholderText(QCoreApplication.translate("self", u"Joana", None))
         self.adress.setPlaceholderText(QCoreApplication.translate("self", u"123.456.7.890", None))
         self.port.setPlaceholderText(QCoreApplication.translate("self", u"5000", None))
 
-
+    # Efetua login
     def login(self):
+
+        # Recebe entradas dos campos
         self.name = self.username.text()
         self.addr = str(self.adress.text())
         self.prt = self.port.text()
 
+        # (1) Se um dos campos estiver vazio é enviado o valor padrão
         if len(self.name)==0:
             self.name = 'User'
         if len(self.addr)==0:
@@ -223,12 +232,20 @@ class LogWindow(QMainWindow):
             self.prt = PORT
         self.close()
 
+        # # (2) Se algum dos campos estiver vazio é solicitado ao cliente que insira todos os dados
         # if len(self.name) == 0 or len(self.addr) == 0 or len(self.prt) == 0:
         #     self.error.setText(QCoreApplication.translate("Form", u"Por favor, preencha todos os campos!", None))
         # else:    
         #     # Encerrando janela de login
         #     self.close()
 
+    # Detecta event key
+    def keyPressEvent(self, event):
+        
+        # Salva evento
+        key = event.key() 
+        if key == QtCore.Qt.Key_Return: # se evento for Retur (ENTER) 
+            self.login() # chama função de login
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

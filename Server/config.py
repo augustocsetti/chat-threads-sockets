@@ -1,14 +1,16 @@
 import socket
 
-HEADER = 64
-FORMAT = "utf-8"
+# DEFINIÇÕES PARA SOCKET
+HEADER = 64 # tamanho da msgm padrão (bytes)
+FORMAT = "utf-8" # formato para codificação
 
-SERVER = socket.gethostbyname(socket.gethostname())
-PORT = 5000
-ADDR = (SERVER, PORT)
+SERVER = socket.gethostbyname(socket.gethostname()) # endereço de IP (local)
+PORT = 5000 # porta para comunicação
+ADDR = (SERVER, PORT) 
 
-# Códigos para mensagem do sistema
+# TAGS PARA COMUNICAÇÕES DO SISTEMA
 NEW_MESSAGE = '0'
 NAME_LIST = '1'
 CLEAR_LIST = '2'
 DISCONNECT_MESSAGE = '3'
+CHANGE_NAME = '4'

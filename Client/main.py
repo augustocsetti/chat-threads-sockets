@@ -1,10 +1,10 @@
-from logWindow import createLogWindow
-from mainWindow import *
+from windowLog import createWindowLog
+from window import *
 
 
 def start():
     # Iniciando janela de login e recebendo parâmetro
-    name, addr, port = createLogWindow()
+    name, addr, port = createWindowLog()
 
     # Iniciando Janela do chat, que inicia a classe client
     if (name and addr and port):
